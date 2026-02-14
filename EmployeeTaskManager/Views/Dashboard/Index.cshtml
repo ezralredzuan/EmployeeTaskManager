@@ -1,0 +1,456 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    .stat-card {
+        border-radius: 14px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.08);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px rgba(0,0,0,.12);
+        }
+
+    .kanban-column {
+        min-height: 420px;
+        border-radius: 16px;
+        padding: 10px;
+        transition: all .2s ease;
+        border: 2px solid transparent;
+    }
+
+        .kanban-column[data-status="Pending"] {
+            background: rgba(250, 204, 21, 0.12);
+            border-color: #facc15;
+        }
+
+        .kanban-column[data-status="In Progress"] {
+            background: rgba(234, 88, 12, 0.12);
+            border-color: #ea580c;
+        }
+
+        .kanban-column[data-status="In Review"] {
+            background: rgba(124, 58, 237, 0.12);
+            border-color: #7c3aed;
+        }
+
+        .kanban-column[data-status="Complete"] {
+            background: rgba(22, 163, 74, 0.12);
+            border-color: #16a34a;
+        }
+
+        .kanban-column:hover {
+            box-shadow: 0 14px 40px rgba(0,0,0,.12), inset 0 0 0 2px rgba(13,110,253,.25);
+        }
+
+        .kanban-column.drag-over {
+            outline: 3px dashed #0d6efd;
+            outline-offset: -6px;
+            background: #eef5ff;
+        }
+
+    .kanban-title {
+        font-weight: 600;
+        margin-bottom: .75rem;
+        letter-spacing: .3px;
+    }
+
+    .task-card {
+        display: flex;
+        align-items: stretch;
+        background: #fff;
+        border-radius: 12px;
+        border: 1.5px solid #000;
+        box-shadow: 0 6px 16px rgba(0,0,0,.08);
+        margin-bottom: .75rem;
+        cursor: default;
+        transition: all .2s ease;
+    }
+
+        .task-card.dragging {
+            opacity: .4;
+        }
+
+        .task-card:hover {
+            border-color: #0d6efd;
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+    .task-title {
+        font-size: .95rem;
+        font-weight: 500;
+    }
+
+    .task-content {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .75rem .85rem;
+        width: 100%;
+    }
+
+    .status-strip {
+        width: 6px;
+        border-radius: 12px 0 0 12px;
+        background: gray;
+    }
+
+    [data-status="Pending"] .status-strip {
+        background: #facc15;
+    }
+
+    [data-status="In Progress"] .status-strip {
+        background: #ea580c;
+    }
+
+    [data-status="In Review"] .status-strip {
+        background: #7c3aed;
+    }
+
+    [data-status="Complete"] .status-strip {
+        background: #16a34a;
+    }
+
+
+    .drag-handle {
+        cursor: grab;
+        font-size: 1.2rem;
+        user-select: none;
+        opacity: .6;
+    }
+
+        .drag-handle:hover {
+            opacity: 1;
+        }
+
+    .task-card:active .drag-handle {
+        cursor: grabbing;
+    }
+
+    .ghost {
+        opacity: .25;
+        border-style: dashed;
+    }
+
+    .task-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+    }
+
+    .task-modal-card {
+        background: #fff;
+        border-radius: 16px;
+        width: 420px;
+        max-width: 90%;
+        box-shadow: 0 25px 60px rgba(0,0,0,.25);
+        animation: popIn .2s ease;
+    }
+
+    .task-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .task-modal-body {
+        padding: 1.25rem;
+        color: #444;
+        font-size: .95rem;
+        line-height: 1.6;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        opacity: .6;
+    }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+</style>
+
+@if (ViewBag.Role == "Admin")
+{
+    <h4>Admin Dashboard</h4>
+}
+else
+{
+    <h4>Employee Dashboard</h4>
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-bg-primary mb-3 stat-card">
+            <div class="card-body">
+                <h5>Total Employees</h5>
+                <h3>@ViewBag.TotalEmployees</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-info mb-3 stat-card">
+            <div class="card-body">
+                <h5>Total Tasks</h5>
+                <h3>@ViewBag.TotalTasks</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-success mb-3 stat-card">
+            <div class="card-body">
+                <h5>Completed</h5>
+                <h3>@ViewBag.CompletedTasks</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-warning mb-3 stat-card">
+            <div class="card-body">
+                <h5>Pending</h5>
+                <h3>@ViewBag.PendingTasks</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-md-3">
+        <h5 class="kanban-title text-center">Pending</h5>
+        <div class="kanban-column p-2"
+             data-status="Pending"
+             ondrop="drop(event)"
+             ondragover="allowDrop(event)">
+            @foreach (var task in ViewBag.Pending)
+            {
+                <div class="card mb-2 task-card"
+                     ondragstart="drag(event)"
+                     ondragend="dragEnd()"
+                     data-id="@task.Id">
+
+                    <div class="status-strip"></div>
+
+                    <div class="task-content">
+                        <span class="drag-handle">☰</span>
+                        <span class="task-title">@task.Title</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                                onclick="viewTask('@task.Title', '@task.Description?.Replace("'", "\\'")')">
+                            View
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <h5 class="text-center">In Progress</h5>
+        <div class="kanban-column p-2"
+             data-status="In Progress"
+             ondrop="drop(event)"
+             ondragover="allowDrop(event)">
+            @foreach (var task in ViewBag.InProgress)
+            {
+                <div class="card mb-2 task-card"
+                     ondragstart="drag(event)"
+                     ondragend="dragEnd()"
+                     data-id="@task.Id">
+
+                    <div class="status-strip"></div>
+
+                    <div class="task-content">
+                        <span class="drag-handle">☰</span>
+                        <span class="task-title">@task.Title</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                                onclick="viewTask('@task.Title', '@task.Description?.Replace("'", "\\'")')">
+                            View
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <h5 class="text-center">In Review</h5>
+        <div class="kanban-column p-2"
+             data-status="In Review"
+             ondrop="drop(event)"
+             ondragover="allowDrop(event)">
+            @foreach (var task in ViewBag.Review)
+            {
+                <div class="card mb-2 task-card"
+                     ondragstart="drag(event)"
+                     ondragend="dragEnd()"
+                     data-id="@task.Id">
+
+                    <div class="status-strip"></div>
+
+                    <div class="task-content">
+                        <span class="drag-handle">☰</span>
+                        <span class="task-title">@task.Title</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                                onclick="viewTask('@task.Title', '@task.Description?.Replace("'", "\\'")')">
+                            View
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <h5 class="text-center">Completed</h5>
+        <div class="kanban-column p-2"
+             data-status="Complete"
+             ondrop="drop(event)"
+             ondragover="allowDrop(event)">
+            @foreach (var task in ViewBag.Complete)
+            {
+                <div class="card mb-2 task-card"
+                     ondragstart="drag(event)"
+                     ondragend="dragEnd()"
+                     data-id="@task.Id">
+
+                    <div class="status-strip"></div>
+
+                    <div class="task-content">
+                        <span class="drag-handle">☰</span>
+                        <span class="task-title">@task.Title</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                                onclick="viewTask('@task.Title', '@task.Description?.Replace("'", "\\'")')">
+                            View
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div id="taskModal" class="task-modal-overlay" onclick="closeTaskModal(event)">
+    <div class="task-modal-card">
+        <div class="task-modal-header">
+            <h5 id="modalTitle"></h5>
+            <button class="close-btn" onclick="closeTaskModal()">✕</button>
+        </div>
+
+        <div class="task-modal-body">
+            <p id="modalDescription"></p>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let draggedTask = null;
+    let originalColumn = null;
+    let ghost = null;
+
+    document.addEventListener("mousedown", e => {
+        if (e.target.classList.contains("drag-handle")) {
+            const card = e.target.closest(".task-card");
+            card.setAttribute("draggable", "true");
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        document.querySelectorAll(".task-card").forEach(c => {
+            c.removeAttribute("draggable");
+        });
+    });
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add("drag-over");
+    }
+
+    function drag(ev) {
+        draggedTask = ev.target.closest(".task-card");
+        originalColumn = draggedTask.parentElement;
+
+        draggedTask.classList.add("dragging");
+
+        ghost = draggedTask.cloneNode(true);
+        ghost.classList.add("ghost");
+        ghost.style.width = draggedTask.offsetWidth + "px";
+        ev.dataTransfer.setDragImage(ghost, 10, 10);
+
+        ev.dataTransfer.setData("text/plain", draggedTask.dataset.id);
+    }
+
+    function dragEnd() {
+        if (draggedTask) {
+            draggedTask.classList.remove("dragging");
+        }
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+
+        const taskId = ev.dataTransfer.getData("text/plain");
+        const status = ev.currentTarget.dataset.status;
+
+        if (!draggedTask) return;
+
+        ev.currentTarget.appendChild(draggedTask);
+        ev.currentTarget.classList.remove("drag-over");
+
+        fetch('/Tasks/UpdateStatus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `taskId=${taskId}&status=${status}`
+        })
+        .then(res => {
+            if (!res.ok) throw new Error();
+        })
+        .catch(() => {
+            originalColumn.appendChild(draggedTask);
+            alert("Failed to update task. Reverted.");
+        })
+        .finally(() => {
+            draggedTask = null;
+            originalColumn = null;
+        }); 
+    }
+
+    document.querySelectorAll(".kanban-column").forEach(col => {
+        col.addEventListener("dragleave", () => {
+            col.classList.remove("drag-over");
+        });
+    });
+
+        function viewTask(title, description) {
+        document.getElementById("modalTitle").innerText = title;
+        document.getElementById("modalDescription").innerText =
+            description || "No description provided.";
+
+        document.getElementById("taskModal").style.display = "flex";
+    }
+
+    function closeTaskModal(e) {
+        if (!e || e.target.id === "taskModal") {
+            document.getElementById("taskModal").style.display = "none";
+        }
+    }
+</script>
+
+

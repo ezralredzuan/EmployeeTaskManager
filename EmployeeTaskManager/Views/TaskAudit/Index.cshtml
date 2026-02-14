@@ -1,0 +1,101 @@
+﻿@model IEnumerable<EmployeeTaskManager.Models.TaskAudit>
+
+@{
+    ViewData["Title"] = "Task Logs";
+}
+
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f2f6f9;
+    }
+
+    .responsive-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+
+    .responsive-table__row {
+        display: grid;
+        grid-template-columns: 2fr 3fr 1fr 2fr;
+        padding: 15px 20px;
+        border-bottom: 1px solid #edeef2;
+        align-items: center;
+    }
+
+    .responsive-table__head {
+        background: #e1e8f2;
+        font-weight: 600;
+    }
+
+    .responsive-table__row:hover {
+        background-color: #f8fafc;
+    }
+
+    .btn-custom {
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-left: 10px;
+    }
+
+    .btn-print {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-excel {
+        background-color: #198754;
+        color: white;
+    }
+</style>
+
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Task Activity Logs</h2>
+
+        <div>
+            <button onclick="window.print()" class="btn-custom btn-print">
+                Print
+            </button>
+
+            <a asp-action="ExportExcel" class="btn-custom btn-excel">
+                Download Excel
+            </a>
+        </div>
+    </div>
+
+    <table class="responsive-table">
+        <thead class="responsive-table__head">
+            <tr class="responsive-table__row">
+                <th>Task</th>
+                <th>Action</th>
+                <th>User</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var log in Model)
+            {
+                <tr class="responsive-table__row">
+                    <td>@log.TaskItem?.Title</td>
+                    <td>@log.Action</td>
+                    <td>@log.UserId</td>
+                    <td>@log.ActionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
